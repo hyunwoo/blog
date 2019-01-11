@@ -2,26 +2,27 @@
   <v-container>
     <v-layout class="editor-field">
       <v-flex xs12>
-        <textarea ref='editorField'>
-        </textarea>
+        <div ref="editorField"></div>
       </v-flex>
     </v-layout>
-    <v-layout>
-      <div>
-        <v-btn depressed>B</v-btn>
-      </div>
-      <div>
-        <v-btn depressed
-               color="primary">Primary</v-btn>
-      </div>
+    <v-layout wrap>
+      <v-flex sm4 md6 lg8 pa-1></v-flex>
+      <v-flex xs12 sm4 md3 lg2 pa-1>
+        <div>
+          <v-btn depressed block color="primary">저장하기</v-btn>
+        </div>
+      </v-flex>
+      <v-flex xs12 sm4 md3 lg2 pa-1>
+        <div>
+          <v-btn depressed block color="primary" @click="save">게시하기</v-btn>
+        </div>
+      </v-flex>
     </v-layout>
+    <v-flex lg1></v-flex>
   </v-container>
 </template>
 <script src='./editor.ts' />
 <style lang='scss'>
-h3 {
-  background: #f00;
-}
 .editor-field {
 }
 .ck.ck-editor {
