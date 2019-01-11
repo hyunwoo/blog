@@ -18,8 +18,19 @@ interface BoardMeta {
 
 type AsyncFunction<I, O> = (inputs: I) => Promise<O>;
 export default class Board {
-  public static exist(id: string): boolean {
-    return true;
+  public static exist(id: string): Promise<Response<boolean>> {
+    // @ts-ignore
+    return new Promise<Response<boolean>>((resolve, reject) => {
+      BoardApi.exist(id)
+        .then((result) => {
+          const isExist = result.data;
+          const response = new Response<boolean>(true).setData(isExist);
+          resolve(response);
+        })
+        .catch((e) => {
+          reject(new Response<boolean>(false));
+        });
+    });
   }
   public static create(id: string): Promise<Response<Board>> {
     // @ts-ignore

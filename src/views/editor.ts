@@ -8,40 +8,53 @@ import Board from '../lib/api/board';
 import { v1 as uuid } from 'uuid';
 import _ from 'lodash';
 
-console.log(CKEditor);
 @Component({
   components: {
     ckeditor: CKEditor.component
   },
   data() {
-    return {};
+    return {
+      title: '',
+      ui: {
+        button: {
+          fab: false
+        }
+      }
+    };
   }
 })
 export default class Editor extends Vue {
+  public title: string = '';
+  public fab: boolean = false;
   public editor: CKClassicEditor;
+  public toggleIcon: number = 0;
   // @ts-ignore
   public board: Board;
+  public dropdownCategory: string[] = ['NOTICE', 'BOARD', 'Q&A'];
   private id: string = '';
 
   constructor() {
     super();
   }
-
   public created() {
     this.id = this.$route.params.id;
   }
   public async mounted() {
-    const isExist = await Board.exist(this.id);
-    this.editor = await CKClassicEditor.create(this.$refs.editorField);
-    this.editor.plugins.get('FileRepository').createUploadAdapter = (
-      loader
-    ) => {
+    console.log('mounted!');
+    const isExist = (await Board.exist(this.id)).data;
+    this.editor = await CKClassicEditor.create(this.$refs.editorField, {
+      toolbal: {
+        viewportTopOffset: 30
+      }
+    });
+    this.editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
       return new UploadAdapter(loader, this.board);
     };
 
     if (isExist) {
       // Exist! load content
       this.board = (await Board.load(this.id)).data;
+      this.title = this.board.title;
       this.editor.setData(this.board.content);
       console.log('loaded', this.board);
     } else {
@@ -59,10 +72,11 @@ export default class Editor extends Vue {
         console.log('save over');
       }, 1000)
     );
+    // this.loadingDialog.close();
   }
   public async save() {
-    console.log('editor', this.editor.getData());
-    console.log('save');
+    console.log('on Save');
+    this.board.title = this.title;
     const ret = await this.board.save();
     // console.log(ret);
     // todo save
