@@ -3,8 +3,6 @@ import './plugins/vuetify';
 import App from './App.vue';
 import router from './router';
 import store from './store';
-import { LoadingDialog } from './lib/ui/dialongLoading';
-import { Dialog } from './lib/ui/dialog';
 
 new Vue({
   router,

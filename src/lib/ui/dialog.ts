@@ -11,16 +11,22 @@ export interface Dialog {
 }
 
 import Vue from 'vue';
-import { LoadingDialog } from './dialongLoading';
-import ProgressDialog from './vue/progressDialog';
-import NormalDialog from './vue/dialog.vue';
+import ProgressDialog from './vue/progressDialog.vue';
 
-export function DialogPlugin(vue: typeof Vue): void {
-  const data = new LoadingDialog();
-  const instance = new NormalDialog();
-  instance.$mount(document.body.appendChild(document.createElement('div')));
-  // todo set directive
-
-  // Vue.prototype.$loadingDialog.open();
-  // console.log('wt?');
+declare module 'vue/types/vue' {
+  interface Vue {
+    progressDialog: Dialog;
+  }
 }
+
+export default {
+  progressDialogInstance: new ProgressDialog(),
+  install(vue: typeof Vue, opts) {
+    console.log('call install');
+    Vue.prototype.progressDialog = this.progressDialogInstance;
+
+    this.progressDialogInstance.$mount(
+      document.body.appendChild(document.createElement('div'))
+    );
+  }
+};

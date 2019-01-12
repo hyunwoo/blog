@@ -124,6 +124,7 @@
 .ck.ck-editor__main {
 }
 .ck.ck-editor__editable {
+  min-height: 480px;
   max-height: 100%;
 }
 .v-speed-dial {

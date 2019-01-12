@@ -40,7 +40,8 @@ export default class Editor extends Vue {
     this.id = this.$route.params.id;
   }
   public async mounted() {
-    console.log('mounted!');
+    this.progressDialog.open();
+    this.progressDialog.updateMessage('페이지를 로딩중입니다.');
     const isExist = (await Board.exist(this.id)).data;
     this.editor = await CKClassicEditor.create(this.$refs.editorField, {
       toolbal: {
@@ -52,12 +53,13 @@ export default class Editor extends Vue {
     };
 
     if (isExist) {
-      // Exist! load content
+      this.progressDialog.updateMessage('작성된 게시글을 로딩중 입니다.');
       this.board = (await Board.load(this.id)).data;
       this.title = this.board.title;
       this.editor.setData(this.board.content);
       console.log('loaded', this.board);
     } else {
+      this.progressDialog.updateMessage('새로운 게시글을 생성중 입니다.');
       // not exist! create content
       this.board = (await Board.create(this.id)).data;
     }
@@ -72,7 +74,7 @@ export default class Editor extends Vue {
         console.log('save over');
       }, 1000)
     );
-    // this.loadingDialog.close();
+    this.progressDialog.close();
   }
   public async save() {
     console.log('on Save');

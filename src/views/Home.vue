@@ -18,6 +18,7 @@
               text-xs-center>
         <v-btn large
                color="info"
+               @click="toEditor"
                to="/editor/test">
           <h3>업로드</h3>
         </v-btn>
@@ -28,7 +29,12 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import { v1 as uuid } from 'uuid';
 
 @Component({})
-export default class Home extends Vue {}
+export default class Home extends Vue {
+  public toEditor() {
+    this.$router.push(`/editor/${uuid()}`);
+  }
+}
 </script>
