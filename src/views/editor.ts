@@ -5,6 +5,7 @@ import UploadAdapter from '../lib/uploadAdapter';
 import Board from '../lib/api/board';
 import { UiBoardIcon, UiConfiguration } from '../lib/configuration/ui';
 import { debounce } from 'lodash';
+import Axios from 'axios';
 
 console.log(UiConfiguration.getUICategoryNameFromValue('notice'));
 @Component({
@@ -46,6 +47,7 @@ export default class Editor extends Vue {
     this.board.category = UiConfiguration.getUiCategoryValueFromName(
       this.category
     );
+    this.board.content = this.editor.getData();
     await this.board.save();
   }
 
@@ -84,6 +86,7 @@ export default class Editor extends Vue {
     if (isExist) {
       this.progressDialog.updateMessage('작성된 게시글을 로딩중 입니다.');
       this.board = (await Board.load(this.id)).data;
+      await this.board.loadContent();
       this.title = this.board.title;
       this.editor.setData(this.board.content);
       console.log('loaded', this.board);

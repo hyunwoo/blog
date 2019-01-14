@@ -4,6 +4,7 @@ import config from './certification';
 import Board from '@/lib/api/board';
 import Response from '@/lib/api/response';
 import { map, isNil } from 'lodash';
+import Axios from 'axios';
 
 firebase.initializeApp(config);
 
@@ -58,9 +59,9 @@ const BoardApi = {
       db.collection(this.collection)
         .doc(id)
         .get()
-        .then((doc) => {
+        .then(async (doc) => {
           if (doc.exists) {
-            const data = doc.data();
+            const data = doc.data() as Board;
             resolve(new Response(true).setData(data as object));
           } else {
             reject(
@@ -81,7 +82,7 @@ const BoardApi = {
         const responseSaveBoard = await this.createPage(board);
         db.collection(this.collection)
           .doc(board.getId())
-          .set(board.getSaveContent(responseSaveBoard.data))
+          .set(board.getSaveStructure(responseSaveBoard.data))
           .then(() => resolve(new Response(true)))
           .catch((e) => reject(new Response(false).setError(e)));
       } catch (e) {
@@ -93,6 +94,7 @@ const BoardApi = {
     return new Promise((resolve, reject) => {
       const content = board.content;
       const id = board.getId();
+      console.log('create Page', content, 'as board');
       const ref = storage.ref(`board/${board.getId()}.html`);
       ref
         .putString(content)

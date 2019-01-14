@@ -38,6 +38,7 @@ export default class Board {
     // @ts-ignore
     return new Promise<Response<Board>>((resolve, reject) => {
       const board = new Board(id);
+      board.createdAt = new Date().getTime();
       const response = new Response<Board>(true).setData(board);
       resolve(response);
     });
@@ -50,7 +51,6 @@ export default class Board {
         const board = new Board(id);
         const r = await BoardApi.get(id);
         await board.inject(r.data);
-
         const response = new Response<Board>(true).setData(board);
         resolve(response);
       } catch (e) {
@@ -70,9 +70,9 @@ export default class Board {
   public icon: number = 0;
   public category: string = '';
   private id: string = '';
-  private createdAt: string = '';
-  private modifiedAt: string = '';
-  private publishedAt: string = '';
+  private createdAt: number = 0;
+  private modifiedAt: number = 0;
+  private publishedAt: number = 0;
   private viewCount: number = 0;
   private likeCount: number = 0;
   private unlikeCount: number = 0;
@@ -84,13 +84,14 @@ export default class Board {
   public save(): Promise<null> {
     // @ts-ignore
     return new Promise((resolve, reject) => {
+      this.modifiedAt = new Date().getTime();
       BoardApi.set(this)
         .then(() => resolve())
         .catch((e) => reject(e));
     });
   }
 
-  public getSaveContent(downloadUrl: string): object {
+  public getSaveStructure(downloadUrl: string): object {
     const object = JSON.parse(JSON.stringify(this));
     delete object.content;
     object.savedContentURL = downloadUrl;
@@ -104,13 +105,13 @@ export default class Board {
     return this.content;
   }
   public getCreatedAt(): string {
-    return this.createdAt;
+    return new Date(this.createdAt).toLocaleString();
   }
   public getModifiedAt(): string {
-    return this.modifiedAt;
+    return new Date(this.modifiedAt).toLocaleString();
   }
   public getPublishedAt(): string {
-    return this.publishedAt;
+    return new Date(this.publishedAt).toLocaleString();
   }
   public getViewCount(): number {
     return this.viewCount;
@@ -121,25 +122,34 @@ export default class Board {
   public getUnlikeCount(): number {
     return this.unlikeCount;
   }
+  public get contentDownloadURL(): string {
+    return this.savedContentURL;
+  }
   public setOption(key: string, value: string | number) {
     this[key] = value;
   }
   public getOptionValue(key: string): string | number {
     return this[key];
   }
+
+  public loadContent(): Promise<Response<void>> {
+    // @ts-ignore :: New Lint Off
+    return new Promise<Response<void>>(async (resolve, reject) => {
+      try {
+        if (
+          !_.isNil(this.savedContentURL) &&
+          !_.isEmpty(this.savedContentURL)
+        ) {
+          const content = await axios.get(this.savedContentURL);
+          this.content = content.data;
+        }
+        resolve(new Response<void>(true));
+      } catch (e) {
+        resolve(new Response<void>(false).setError(e));
+      }
+    });
+  }
   private async inject(object: any) {
     Object.assign(this, object);
-    try {
-      if (
-        !_.isNil(object.savedContentURL) &&
-        !_.isEmpty(object.savedContentURL)
-      ) {
-        const content = await axios.get(object.savedContentURL);
-        this.content = content.data;
-      }
-      return true;
-    } catch (e) {
-      return false;
-    }
   }
 }

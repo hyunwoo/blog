@@ -1,9 +1,15 @@
 <template>
   <v-container>
     <v-list-tile>게시글 카운트 {{boards.length}}</v-list-tile>
-    <template v-for="(boardItem, i) in boards">
-      <h4 :key="i">{{boardItem.title}} {{boardItem.icon}}</h4>
-    </template>
+    <v-data-table :headers="headers" :items="boards" class="elevation-2">
+      <template slot="items" slot-scope="props">
+        <td>{{ props.item.icon }}</td>
+        <td>{{ props.item.title }}</td>
+        <td class="text-xs-right">{{ props.item.viewCount }}</td>
+        <td class="text-xs-right">{{ props.item.createdAt }}</td>
+        <td class="text-xs-right">{{ props.item.id }}</td>
+      </template>
+    </v-data-table>
   </v-container>
 </template>
 
@@ -15,6 +21,17 @@ import { FirebaseCommon } from '@/lib/api/firebase';
 import Board from '@/lib/api/board';
 @Component({})
 export default class Home extends Vue {
+  private headers = [
+    {
+      text: 'Icon',
+      align: 'left',
+      value: 'name'
+    },
+    { text: '제목', value: 'title' },
+    { text: '조회수', value: 'viewCount' },
+    { text: '생성일', value: 'createdAt' },
+    { text: 'ID', value: 'id' }
+  ];
   private boards: Board[] = [];
   private categories: UiCategory[] = UiConfiguration.uiCategories;
   public toEditor() {
