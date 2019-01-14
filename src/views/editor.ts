@@ -1,45 +1,72 @@
 import CKEditor from '@ckeditor/ckeditor5-vue';
 import CKClassicEditor from '@ckeditor/ckeditor5-build-classic/';
-// import template from './editor.html';
-import { Component, Vue } from 'vue-property-decorator';
-import Router from 'vue-router';
+import { Component, Vue, Watch } from 'vue-property-decorator';
 import UploadAdapter from '../lib/uploadAdapter';
 import Board from '../lib/api/board';
-import { v1 as uuid } from 'uuid';
-import _ from 'lodash';
+import { UiBoardIcon, UiConfiguration } from '../lib/configuration/ui';
+import { debounce } from 'lodash';
 
+console.log(UiConfiguration.getUICategoryNameFromValue('notice'));
 @Component({
   components: {
     ckeditor: CKEditor.component
-  },
-  data() {
-    return {
-      title: '',
-      ui: {
-        button: {
-          fab: false
-        }
-      }
-    };
   }
 })
 export default class Editor extends Vue {
   public title: string = '';
   public fab: boolean = false;
-  public editor: CKClassicEditor;
-  public toggleIcon: number = 0;
-  // @ts-ignore
-  public board: Board;
-  public dropdownCategory: string[] = ['NOTICE', 'BOARD', 'Q&A'];
+  public boardIcon: number = 0;
+  public boardIcons: UiBoardIcon[] = UiConfiguration.uiBoardIcons;
+  public category: string = UiConfiguration.uiCategoryNames[0];
+  public dropdownCategory: string[] = UiConfiguration.uiCategoryNames;
+  public saveContent: (() => Promise<void>);
+  // @ts-ignore : Mounted에 호출됨.
+  private board: Board;
+  private editor: CKClassicEditor;
   private id: string = '';
 
   constructor() {
     super();
+    this.saveContent = debounce(this.saveImmediate, 1000);
   }
-  public created() {
-    this.id = this.$route.params.id;
+
+  public onChangeCateogory(e) {
+    console.log('changed', e);
   }
-  public async mounted() {
+
+  public getEditor() {
+    return this.editor;
+  }
+  public getBoard() {
+    return this.board;
+  }
+  public async saveImmediate() {
+    this.board.title = this.title;
+    this.board.icon = this.boardIcon;
+    this.board.category = UiConfiguration.getUiCategoryValueFromName(
+      this.category
+    );
+    await this.board.save();
+  }
+
+  // private methods Vue Watch
+  @Watch('category')
+  private onCategoryChanged(value: string, oldValue: string): void {
+    this.saveContent();
+  }
+
+  @Watch('boardIcon')
+  private onBoardIconChanged(value: string, oldValue: string): void {
+    this.saveContent();
+  }
+
+  @Watch('title')
+  private onTitleChanged(value: string, oldValue: string): void {
+    this.saveContent();
+  }
+
+  // private methods Vue Default Methods
+  private async mounted() {
     this.progressDialog.open();
     this.progressDialog.updateMessage('페이지를 로딩중입니다.');
     const isExist = (await Board.exist(this.id)).data;
@@ -48,7 +75,9 @@ export default class Editor extends Vue {
         viewportTopOffset: 30
       }
     });
-    this.editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+    this.editor.plugins.get('FileRepository').createUploadAdapter = (
+      loader
+    ) => {
       return new UploadAdapter(loader, this.board);
     };
 
@@ -64,42 +93,11 @@ export default class Editor extends Vue {
       this.board = (await Board.create(this.id)).data;
     }
 
-    console.log(this.board.getId());
-
-    this.editor.model.document.on(
-      'change:data',
-      _.debounce(async (e) => {
-        this.board.content = this.editor.getData();
-        const ret = await this.board.save();
-        console.log('save over');
-      }, 1000)
-    );
+    this.editor.model.document.on('change:data', this.saveContent);
     this.progressDialog.close();
   }
-  public async save() {
-    console.log('on Save');
-    this.board.title = this.title;
-    const ret = await this.board.save();
-    // console.log(ret);
-    // todo save
+  private created() {
+    console.log('created!');
+    this.id = this.$route.params.id;
   }
 }
-
-// export default {
-//   data() {
-//     return {
-//       editor: Editor,
-//       editorConfig: {},
-//       editorData: ''
-//     };
-//   },
-//   methods: {
-//     save() {
-//       console.log(this);
-//     }
-//   },
-//   mounted() {
-//     console.log('default mounted');
-
-//   }
-// };

@@ -1,8 +1,9 @@
-import config from './certification';
 import firebase from 'firebase';
-import Board from './board';
 import { v1 as uuid } from 'uuid';
-import Response from './response';
+import config from './certification';
+import Board from '@/lib/api/board';
+import Response from '@/lib/api/response';
+import { map, isNil } from 'lodash';
 
 firebase.initializeApp(config);
 
@@ -12,7 +13,35 @@ db.settings({ timestampsInSnapshots: true });
 
 const BoardApi = {
   collection: 'board',
-  boardName: 'name',
+  getBoards(
+    category?: string,
+    page?: number,
+    count?: number
+  ): Promise<Response<Board[]>> {
+    return new Promise<Response<Board[]>>((resolve, reject) => {
+      console.log('request collection', this.collection);
+      const collection = db.collection(this.collection);
+      let queryCollection;
+      if (!isNil(category)) {
+        queryCollection = collection.where('category', '==', category);
+      } else {
+        queryCollection = collection;
+      }
+      const items: Board[] = [];
+      queryCollection
+        .get()
+        .then((querySnapShot) => {
+          querySnapShot.forEach((doc) => {
+            const board = Board.loadFromData(doc.id, doc.data());
+            items.push(board);
+          });
+          resolve(new Response<Board[]>(true).setData(items));
+        })
+        .catch((e: Error) => {
+          reject(new Response<Board[]>(false).setError(e));
+        });
+    });
+  },
   exist(id: string): Promise<Response<boolean>> {
     return new Promise<Response<boolean>>((resolve, reject) => {
       db.collection(this.collection)
@@ -48,7 +77,6 @@ const BoardApi = {
   },
   set(board: Board): Promise<Response<void>> {
     return new Promise(async (resolve, reject) => {
-      console.log('here save', board);
       try {
         const responseSaveBoard = await this.createPage(board);
         db.collection(this.collection)
@@ -82,12 +110,23 @@ const BoardApi = {
         });
     });
   },
-  createMedia(file: File, board: Board): Promise<Response<string>> {
+  createMedia(
+    file: File,
+    board: Board,
+    onProgress?: (state: string, progress: number) => void
+  ): Promise<Response<string>> {
     return new Promise((resolve, reject) => {
       const id: string = uuid();
       const ref = storage.ref(`board/${board.getId()}/${id}`);
-      ref
-        .put(file)
+      const task = ref.put(file);
+      task.on('state_changed', (snapshot: any) => {
+        if (onProgress !== undefined) {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          onProgress(snapshot.state, progress);
+        }
+      });
+      task
         .then((s) => {
           return ref;
         })
@@ -105,5 +144,8 @@ const BoardApi = {
     });
   }
 };
+const FirebaseCommon = BoardApi;
 
+export { FirebaseCommon };
 export { BoardApi };
+export default { BoardApi };

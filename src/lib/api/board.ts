@@ -14,6 +14,8 @@ interface BoardMeta {
   viewCount: number;
   likeCount: number;
   unlikeCount: number;
+  icon?: string;
+  category?: string;
 }
 
 type AsyncFunction<I, O> = (inputs: I) => Promise<O>;
@@ -56,10 +58,17 @@ export default class Board {
       }
     });
   }
+  public static loadFromData(id: string, data: object): Board {
+    const board = new Board(id);
+    board.inject(data);
+    return board;
+  }
 
   public title: string = '';
   public content: string = '';
   public savedContentURL: string = '';
+  public icon: number = 0;
+  public category: string = '';
   private id: string = '';
   private createdAt: string = '';
   private modifiedAt: string = '';
@@ -112,7 +121,12 @@ export default class Board {
   public getUnlikeCount(): number {
     return this.unlikeCount;
   }
-
+  public setOption(key: string, value: string | number) {
+    this[key] = value;
+  }
+  public getOptionValue(key: string): string | number {
+    return this[key];
+  }
   private async inject(object: any) {
     Object.assign(this, object);
     try {

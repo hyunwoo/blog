@@ -20,8 +20,16 @@ export default class UploadAdapter {
       try {
         console.log(this.loader.file);
         console.log(this.board);
-        const ret = await BoardApi.createMedia(this.loader.file, this.board);
+        const ret = await BoardApi.createMedia(
+          this.loader.file,
+          this.board,
+          (state, progress) => {
+            console.log('set Progress', progress);
+            this.loader.uploadTotal = progress;
+          }
+        );
         url = ret.data;
+        this.loader.uploaded = true;
       } catch (e) {
         // here add 404
       }

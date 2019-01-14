@@ -5,7 +5,6 @@ import DialogPlugin from './lib/ui/dialog';
 
 Vue.use(Vuex);
 Vue.use(DialogPlugin);
-console.log('Here App');
 
 @Component({
   components: {}
