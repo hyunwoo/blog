@@ -5,20 +5,6 @@ import Response from './response';
 import axios from 'axios';
 import _ from 'lodash';
 
-interface BoardMeta {
-  title: string;
-  content: string;
-  createAt: string;
-  modifiedAt: string;
-  publishedAt: string;
-  viewCount: number;
-  likeCount: number;
-  unlikeCount: number;
-  icon?: string;
-  category?: string;
-}
-
-type AsyncFunction<I, O> = (inputs: I) => Promise<O>;
 export default class Board {
   public static exist(id: string): Promise<Response<boolean>> {
     // @ts-ignore
@@ -67,8 +53,9 @@ export default class Board {
   public title: string = '';
   public content: string = '';
   public savedContentURL: string = '';
-  public icon: number = 0;
+  public icon: number | undefined = 0;
   public category: string = '';
+  public published: boolean = false;
   private id: string = '';
   private createdAt: number = 0;
   private modifiedAt: number = 0;
@@ -81,6 +68,14 @@ export default class Board {
     this.id = id;
   }
 
+  public publish(state: boolean): void {
+    this.published = state;
+    if (state) {
+      this.publishedAt = new Date().getTime();
+    } else {
+      this.publishedAt = 0;
+    }
+  }
   public save(): Promise<null> {
     // @ts-ignore
     return new Promise((resolve, reject) => {

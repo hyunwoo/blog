@@ -16,11 +16,14 @@ console.log(UiConfiguration.getUICategoryNameFromValue('notice'));
 export default class Editor extends Vue {
   public title: string = '';
   public fab: boolean = false;
-  public boardIcon: number = 0;
+  public boardIcon: number | undefined = 0;
   public boardIcons: UiBoardIcon[] = UiConfiguration.uiBoardIcons;
   public category: string = UiConfiguration.uiCategoryNames[0];
   public dropdownCategory: string[] = UiConfiguration.uiCategoryNames;
   public saveContent: (() => Promise<void>);
+  public isPublish: boolean = false;
+  public isPublishIndeterminate: boolean = false;
+  public isSaving: boolean = false;
   // @ts-ignore : Mounted에 호출됨.
   private board: Board;
   private editor: CKClassicEditor;
@@ -28,7 +31,7 @@ export default class Editor extends Vue {
 
   constructor() {
     super();
-    this.saveContent = debounce(this.saveImmediate, 1000);
+    this.saveContent = debounce(this.saveImmediate, 500);
   }
 
   public onChangeCateogory(e) {
@@ -42,6 +45,7 @@ export default class Editor extends Vue {
     return this.board;
   }
   public async saveImmediate() {
+    this.isSaving = true;
     this.board.title = this.title;
     this.board.icon = this.boardIcon;
     this.board.category = UiConfiguration.getUiCategoryValueFromName(
@@ -49,22 +53,38 @@ export default class Editor extends Vue {
     );
     this.board.content = this.editor.getData();
     await this.board.save();
+    this.isSaving = false;
   }
 
   // private methods Vue Watch
   @Watch('category')
-  private onCategoryChanged(value: string, oldValue: string): void {
+  private onCategoryChanged(value: string, oldValue: string) {
     this.saveContent();
   }
 
   @Watch('boardIcon')
-  private onBoardIconChanged(value: string, oldValue: string): void {
+  private onBoardIconChanged(value: string, oldValue: string) {
     this.saveContent();
   }
 
   @Watch('title')
-  private onTitleChanged(value: string, oldValue: string): void {
+  private onTitleChanged(value: string, oldValue: string) {
     this.saveContent();
+  }
+  private async onPublishChanged() {
+    try {
+      this.board.publish(this.isPublish);
+      this.isPublishIndeterminate = true;
+      this.progressDialog.open();
+      this.progressDialog.updateMessage('게시상태를 변경하고있습니다...');
+      await this.saveImmediate();
+      this.isPublishIndeterminate = false;
+      this.progressDialog.close();
+    } catch (e) {
+      alert('저장에 실패하였습니다.');
+      this.isPublish = !this.isPublish;
+      this.board.publish(this.isPublish);
+    }
   }
 
   // private methods Vue Default Methods
@@ -89,6 +109,8 @@ export default class Editor extends Vue {
       await this.board.loadContent();
       this.title = this.board.title;
       this.editor.setData(this.board.content);
+      this.boardIcon = this.board.icon;
+      this.category = this.board.category;
       console.log('loaded', this.board);
     } else {
       this.progressDialog.updateMessage('새로운 게시글을 생성중 입니다.');
@@ -102,5 +124,12 @@ export default class Editor extends Vue {
   private created() {
     console.log('created!');
     this.id = this.$route.params.id;
+  }
+
+  private getTitleRules() {
+    return [
+      (v: string) => !!v || 'Title is required',
+      (v: string) => v.length <= 40 || 'Title must be less than 40 characters'
+    ];
   }
 }

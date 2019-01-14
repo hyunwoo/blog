@@ -6,9 +6,7 @@
         <span class="font-weight-light">BLOG</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn flat
-             href="https://github.com/vuetifyjs/vuetify/releases/latest"
-             target="_blank">
+      <v-btn flat href="https://github.com/vuetifyjs/vuetify/releases/latest" target="_blank">
         <span class="mr-2">Latest</span>
       </v-btn>
     </v-toolbar>

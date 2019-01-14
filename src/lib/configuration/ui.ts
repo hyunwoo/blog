@@ -20,9 +20,8 @@ export class UiConfiguration {
     { icon: 'star', value: 1, color: 'blue' },
     { icon: 'thumb_up', value: 2, color: 'teal' },
     { icon: 'thumb_down', value: 3, color: 'indigo' },
-    { icon: 'face', value: 4, color: 'orange' },
-    { icon: 'help', value: 5, color: 'brown' },
-    { icon: 'pets', value: 6, color: 'pink' }
+    { icon: 'help', value: 4, color: 'brown' },
+    { icon: 'pets', value: 5, color: 'pink' }
   ];
 
   public static get uiCategoryValues(): string[] {

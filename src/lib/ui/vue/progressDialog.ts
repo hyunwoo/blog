@@ -18,6 +18,7 @@ export default class ProgressDialog extends Vue implements Dialog {
     return this;
   }
   public open(): Dialog {
+    console.log('open!');
     this.use = true;
     return this;
   }
