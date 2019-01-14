@@ -4,10 +4,33 @@ import { Component, Vue, Watch } from 'vue-property-decorator';
 import UploadAdapter from '../lib/uploadAdapter';
 import Board from '../lib/api/board';
 import { UiBoardIcon, UiConfiguration } from '../lib/configuration/ui';
-import { debounce } from 'lodash';
+import { debounce, isNil } from 'lodash';
 import Axios from 'axios';
+import { isNullOrUndefined } from 'util';
+import { readFile } from 'fs';
+import marked from 'marked';
+import FileUtil from '@/util/file';
+// CKEditor Plugins
 
-console.log(UiConfiguration.getUICategoryNameFromValue('notice'));
+// import Underline from '@ckeditor/ckeditor5-basic-styles/src/underline';
+// import Strikethrough from '@ckeditor/ckeditor5-basic-styles/src/strikethrough';
+// import Code from '@ckeditor/ckeditor5-basic-styles/src/code';
+// import Subscript from '@ckeditor/ckeditor5-basic-styles/src/subscript';
+// import Superscript from '@ckeditor/ckeditor5-basic-styles/src/superscript';
+// // import FileRepository from '@ckeditor/ckeditor5-build-classic';
+// import Image from '@ckeditor/ckeditor5-image/src/image';
+// import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption';
+// import ImageStyle from '@ckeditor/ckeditor5-image/src/imagestyle';
+// import ImageUpload from '@ckeditor/ckeditor5-image/src/imageupload';
+// import FileRepository from '@ckeditor/ckeditor5-upload/src/filerepository';
+// import Heading from '@ckeditor/ckeditor5-heading/src/heading';
+
+// // current
+// import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
+// import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+// import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
+// import Italic from '@ckeditor/ckeditor5-basic-styles/src/italic';
+
 @Component({
   components: {
     ckeditor: CKEditor.component
@@ -55,7 +78,22 @@ export default class Editor extends Vue {
     await this.board.save();
     this.isSaving = false;
   }
-
+  public async uploadHtml() {
+    let html: string = (await FileUtil.readInputFileAsString('.html')).data;
+    html = html
+      .replace(/<pre>/gi, '<blockquote>')
+      .replace(/<\/pre>/gi, '</blockquote>');
+    this.editor.setData(html);
+  }
+  public async uploadMD() {
+    let html: string = marked(
+      (await FileUtil.readInputFileAsString('.md')).data
+    );
+    html = html
+      .replace(/<pre>/gi, '<blockquote>')
+      .replace(/<\/pre>/gi, '</blockquote>');
+    this.editor.setData(html);
+  }
   // private methods Vue Watch
   @Watch('category')
   private onCategoryChanged(value: string, oldValue: string) {
@@ -71,9 +109,14 @@ export default class Editor extends Vue {
   private onTitleChanged(value: string, oldValue: string) {
     this.saveContent();
   }
-  private async onPublishChanged() {
+  private async onPublishChanged(state?: boolean) {
     try {
-      this.board.publish(this.isPublish);
+      if (isNil(state)) {
+        this.board.publish(this.isPublish);
+      } else {
+        this.board.publish(state);
+        this.isPublish = true;
+      }
       this.isPublishIndeterminate = true;
       this.progressDialog.open();
       this.progressDialog.updateMessage('게시상태를 변경하고있습니다...');
@@ -92,11 +135,7 @@ export default class Editor extends Vue {
     this.progressDialog.open();
     this.progressDialog.updateMessage('페이지를 로딩중입니다.');
     const isExist = (await Board.exist(this.id)).data;
-    this.editor = await CKClassicEditor.create(this.$refs.editorField, {
-      toolbal: {
-        viewportTopOffset: 30
-      }
-    });
+    this.editor = await CKClassicEditor.create(this.$refs.editorField, {});
     this.editor.plugins.get('FileRepository').createUploadAdapter = (
       loader
     ) => {
@@ -110,7 +149,11 @@ export default class Editor extends Vue {
       this.title = this.board.title;
       this.editor.setData(this.board.content);
       this.boardIcon = this.board.icon;
-      this.category = this.board.category;
+      this.isPublish = this.board.published;
+      console.log('loaded cat is', this.board.category);
+      this.category = UiConfiguration.getUICategoryNameFromValue(
+        this.board.category
+      );
       console.log('loaded', this.board);
     } else {
       this.progressDialog.updateMessage('새로운 게시글을 생성중 입니다.');

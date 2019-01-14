@@ -94,7 +94,6 @@ const BoardApi = {
     return new Promise((resolve, reject) => {
       const content = board.content;
       const id = board.getId();
-      console.log('create Page', content, 'as board');
       const ref = storage.ref(`board/${board.getId()}.html`);
       ref
         .putString(content)
@@ -146,8 +145,6 @@ const BoardApi = {
     });
   }
 };
-const FirebaseCommon = BoardApi;
 
-export { FirebaseCommon };
 export { BoardApi };
 export default { BoardApi };

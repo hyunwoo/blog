@@ -32,13 +32,20 @@ export class UiConfiguration {
   }
   public static getUiCategoryValueFromName(name: string): string {
     const o = _.find(UiConfiguration.uiCategories, (cat) => cat.name === name);
-    return o === undefined ? '' : o.value;
+    return o === undefined ? UiConfiguration.uiCategories[0].value : o.value;
   }
   public static getUICategoryNameFromValue(value: string): string {
     const o = _.find(
       UiConfiguration.uiCategories,
       (cat) => cat.value === value
     );
-    return o === undefined ? '' : o.name;
+    return o === undefined ? UiConfiguration.uiCategories[0].name : o.name;
+  }
+  public static getUIIconFromValue(value: number): UiBoardIcon {
+    const o = _.find(
+      UiConfiguration.uiBoardIcons,
+      (cat) => cat.value === value
+    );
+    return o === undefined ? UiConfiguration.uiBoardIcons[0] : o;
   }
 }
