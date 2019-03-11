@@ -1,7 +1,6 @@
-import Response from '@/lib/api/response';
 export default {
-  readInputFile(accept?: string): Promise<Response<File>> {
-    return new Promise<Response<File>>((resolve, reject) => {
+  readInputFile(accept?: string): Promise<File> {
+    return new Promise<File>((resolve, reject) => {
       const input = document.createElement('input');
       input.setAttribute('type', 'file');
       if (accept !== undefined) {
@@ -13,13 +12,26 @@ export default {
       input.onchange = (evt: Event) => {
         // @ts-ignore
         const file: File = evt.target.files[0];
-        resolve(new Response<File>(true).setData(file));
+        resolve(file);
         document.body.removeChild(input);
       };
     });
   },
-  readInputFileAsString(accept?: string): Promise<Response<string>> {
-    return new Promise<Response<string>>((resolve, reject) => {
+  readFileAsDataURL(file: File): Promise<string | ArrayBuffer> {
+    return new Promise<string | ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = (evt) => {
+        if (reader.result === null) {
+          reject();
+          return;
+        }
+        resolve(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+  readInputFileAsString(accept?: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
       const input = document.createElement('input');
       input.setAttribute('type', 'file');
       if (accept !== undefined) {
@@ -34,15 +46,11 @@ export default {
         const reader: FileReader = new FileReader();
         reader.onload = () => {
           if (reader.result === null) {
-            reject(
-              new Response<string>(false).setError(
-                new Error('file is not exist')
-              )
-            );
+            reject();
             return;
           }
           const html: string = reader.result.toString();
-          resolve(new Response<string>(true).setData(html));
+          resolve(html);
         };
         reader.readAsText(file);
         document.body.removeChild(input);

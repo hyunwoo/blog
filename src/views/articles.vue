@@ -1,11 +1,8 @@
 <template>
   <v-container>
     <v-list-tile>게시글 카운트 {{boards.length}}</v-list-tile>
-    <v-data-table :headers="headers"
-                  :items="boards"
-                  class="elevation-2">
-      <template slot="items"
-                slot-scope="props">
+    <v-data-table :headers="headers" :items="boards" class="elevation-2">
+      <template slot="items" slot-scope="props">
         <td :slot="icon = uiConfigration.getUIIconFromValue(props.item.icon)">
           <v-icon :color="icon.color">{{icon.icon}}</v-icon>
         </td>
@@ -22,8 +19,7 @@
 import { Component, Vue } from 'vue-property-decorator';
 import { v1 as uuid } from 'uuid';
 import { UiCategory, UiConfiguration } from '@/lib/configuration/ui';
-import { BoardApi } from '@/lib/api/firebase';
-import Board from '@/lib/api/board';
+
 @Component({})
 export default class Home extends Vue {
   private headers = [
@@ -38,7 +34,7 @@ export default class Home extends Vue {
     { text: 'ID', value: 'id' }
   ];
   private uiConfigration: UiConfiguration = UiConfiguration;
-  private boards: Board[] = [];
+  // private boards: Board[] = [];
   private categories: UiCategory[] = UiConfiguration.uiCategories;
   public toEditor() {
     this.$router.push(`/editor/${uuid()}`);
@@ -48,17 +44,18 @@ export default class Home extends Vue {
   }
   private async mounted() {
     try {
-      this.boards = (await BoardApi.getBoards(
-        this.$route.params.category
-      )).data;
-      console.log(this.boards);
+      // this.boards = (await BoardApi.getBoards(
+      //   this.$route.params.category
+      // )).data;
+      // console.log(this.boards);
     } catch (e) {
       console.log(e);
     }
   }
   // computed
   public get boardList() {
-    return this.boards;
+    return [];
+    // return this.boards;
   }
 }
 </script>

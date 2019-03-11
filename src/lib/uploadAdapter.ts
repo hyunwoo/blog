@@ -1,39 +1,28 @@
 import CKClassicEditor from '@ckeditor/ckeditor5-build-classic/';
-import Board from '@/lib/api/board';
-import { BoardApi } from '@/lib/api/firebase';
+import { v1 as uuid } from 'uuid';
+import { Storage } from './firebase';
 export default class UploadAdapter {
-  // public static Inject(editor: CKClassicEditor) {
-  //   editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-  //     return new UploadAdapter(loader);
-  //   };
-  // }
-
   private loader: any;
-  private board: Board;
-  constructor(loader, board: Board) {
+  private boardId: string;
+
+  constructor(loader, boardId: string) {
     this.loader = loader;
-    this.board = board;
+    this.boardId = boardId;
+    console.error('upload adapter created');
   }
   public upload() {
+    console.log('upload!');
     return new Promise(async (resolve, reject) => {
-      let url = '';
+      console.log('upload!');
       try {
-        console.log(this.loader.file);
-        console.log(this.board);
-        const ret = await BoardApi.createMedia(
-          this.loader.file,
-          this.board,
-          (state, progress) => {
-            console.log('set Progress', progress);
-            this.loader.uploadTotal = progress;
-          }
-        );
-        url = ret.data;
-        this.loader.uploaded = true;
+        const mediaId = uuid();
+        const storage = new Storage(`board/${this.boardId}/${mediaId}`);
+        await storage.upload(this.loader.file);
+        const url = await storage.getDownloadURL();
+        resolve({ default: url });
       } catch (e) {
-        // here add 404
+        reject(e);
       }
-      resolve({ default: url });
     });
   }
   public abort() {

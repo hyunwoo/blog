@@ -1,8 +1,9 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Home from './views/Home.vue';
-import Editor from './views/editor.vue';
-import Articles from './views/articles.vue';
+import Index from '@/views/Index.vue';
+import Editor from '@/views/editor';
+import Board from '@/views/board';
+import Articles from '@/views/articles.vue';
 
 console.log(Articles);
 Vue.use(Router);
@@ -13,8 +14,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: Home
+      name: 'index',
+      component: Index
     },
     {
       path: '/articles/:category',
@@ -25,6 +26,11 @@ export default new Router({
       path: '/editor/:id',
       name: 'editor',
       component: Editor
+    },
+    {
+      path: '/board/:id',
+      name: 'board',
+      component: Board
     },
     {
       path: '/about',

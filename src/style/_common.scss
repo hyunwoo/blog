@@ -1,0 +1,57 @@
+$border-color: rgba(0, 0, 0, 0.132);
+.progress--area {
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: #f0f0f0;
+  left: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.br {
+  border-right: solid 1px $border-color;
+}
+
+.bl {
+  border-left: solid 1px $border-color;
+}
+
+.bt {
+  border-top: solid 1px $border-color;
+}
+
+.bb {
+  border-bottom: solid 1px $border-color;
+}
+
+.text-ellipse {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.background-light-grey {
+  background: #fafafa;
+}
+
+.scroll-style::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+.scroll-style::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+.scroll-style::-webkit-scrollbar-thumb {
+  background: #ccc;
+}
+
+/* Handle on hover */
+.scroll-style::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

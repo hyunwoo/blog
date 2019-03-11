@@ -14,7 +14,7 @@
     "baseUrl": ".",
     "noImplicitAny": false,
     "resolveJsonModule": true,
-    "types": ["webpack-env"],
+    "types": ["webpack-env", "vuetify"],
     "paths": {
       "@/*": ["src/*"]
     },

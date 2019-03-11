@@ -1,0 +1,11 @@
+@import '../../style/_common.scss';
+.board-content {
+  figure.image {
+    display: block;
+    margin: auto;
+  }
+  img {
+    max-width: 100%;
+    margin: auto;
+  }
+}
