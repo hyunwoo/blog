@@ -1,14 +1,13 @@
-import CKEditor from '@ckeditor/ckeditor5-vue';
-import CKClassicEditor from '@ckeditor/ckeditor5-build-classic/';
+// import CKClassicEditor from '@ckeditor/ckeditor5-build-classic/';
+import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
 import { Component, Vue, Watch } from 'vue-property-decorator';
-import UploadAdapter from '@/lib/uploadAdapter';
+import UploadAdapter from './uploadAdapter';
 import { UiBoardIcon, UiConfiguration } from '@/lib/configuration/ui';
 import { debounce, isNil } from 'lodash';
 import axios from 'axios';
-import { isNullOrUndefined } from 'util';
-import { readFile } from 'fs';
 import marked from 'marked';
 import FileUtil from '@/util/file';
+import _ from 'lodash';
 import { BoardItem, BoardCategory } from '@/lib/forms';
 import {
   FirestoreCollection,
@@ -16,46 +15,26 @@ import {
   Storage
 } from '@/lib/firebase';
 
-// CKEditor Plugins
-// import Underline from '@ckeditor/ckeditor5-basic-styles/src/underline';
-// import Strikethrough from '@ckeditor/ckeditor5-basic-styles/src/strikethrough';
-// import Code from '@ckeditor/ckeditor5-basic-styles/src/code';
-// import Subscript from '@ckeditor/ckeditor5-basic-styles/src/subscript';
-// import Superscript from '@ckeditor/ckeditor5-basic-styles/src/superscript';
+import config from './configration';
 
-// import Image from '@ckeditor/ckeditor5-image/src/image';
-// import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption';
-// import ImageStyle from '@ckeditor/ckeditor5-image/src/imagestyle';
-// import ImageUpload from '@ckeditor/ckeditor5-image/src/imageupload';
-// import FileRepository from '@ckeditor/ckeditor5-upload/src/filerepository';
-// import Heading from '@ckeditor/ckeditor5-heading/src/heading';
-
-// // current
-// import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
-// import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-// import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
-// import Italic from '@ckeditor/ckeditor5-basic-styles/src/italic';
-
-@Component({
-  components: {
-    ckeditor: CKEditor.component
-  }
-})
+@Component({})
 export default class Editor extends Vue {
+  public static mountedId: string = '';
+
   public $refs!: {
     boardItemPreview: HTMLElement;
     editorField: HTMLElement;
   };
-
   public title: string = '';
   public fab: boolean = false;
-
+  public editor = ClassicEditor;
+  public editorConfig = config;
   public boardItem: FirestoreDocument<BoardItem> | null = null;
   public boardIcon: number | undefined = 0;
   public boardIcons: UiBoardIcon[] = UiConfiguration.uiBoardIcons;
   public category: string = UiConfiguration.uiCategoryNames[0];
   public dropdownCategory: string[] = UiConfiguration.uiCategoryNames;
-  public saveContent: (() => Promise<void>);
+  public saveContent: () => Promise<void>;
   public isPublish: boolean = false;
   public isPublishIndeterminate: boolean = false;
   public isSaving: boolean = false;
@@ -63,6 +42,7 @@ export default class Editor extends Vue {
     saving: false,
     selectedCategory: ''
   };
+
   public uiCategoryDialog = {
     visible: false,
     inProgress: false
@@ -74,7 +54,7 @@ export default class Editor extends Vue {
   public boardCategories: Array<FirestoreDocument<BoardCategory>> = [];
 
   // @ts-ignore : Mounted에 호출됨.
-  private editor: CKClassicEditor;
+
   private id: string = '';
 
   constructor() {
@@ -149,81 +129,56 @@ export default class Editor extends Vue {
     console.log('change title');
   }
   public async uploadHtml() {
-    // let html: string = (await FileUtil.readInputFileAsString('.html')).data;
-    // html = html
-    //   .replace(/<pre>/gi, '<blockquote>')
-    //   .replace(/<\/pre>/gi, '</blockquote>');
-    // this.editor.setData(html);
+    // TODO
   }
   public async uploadMD() {
-    // let html: string = marked(
-    //   (await FileUtil.readInputFileAsString('.md')).data
-    // );
-    // html = html
-    //   .replace(/<pre>/gi, '<blockquote>')
-    //   .replace(/<\/pre>/gi, '</blockquote>');
-    // this.editor.setData(html);
-  }
-  // private methods Vue Watch
-
-  private async onPublishChanged(state?: boolean) {
-    // try {
-    //   if (isNil(state)) {
-    //     this.board.publish(this.isPublish);
-    //   } else {
-    //     this.board.publish(state);
-    //     this.isPublish = true;
-    //   }
-    //   this.isPublishIndeterminate = true;
-    //   this.progressDialog.open();
-    //   this.progressDialog.updateMessage('게시상태를 변경하고있습니다...');
-    //   await this.saveImmediate();
-    //   this.isPublishIndeterminate = false;
-    //   this.progressDialog.close();
-    // } catch (e) {
-    //   alert('저장에 실패하였습니다.');
-    //   this.isPublish = !this.isPublish;
-    //   this.board.publish(this.isPublish);
-    // }
+    // TODO
   }
 
-  // private methods Vue Default Methods
   private async mounted() {
+    Editor.mountedId = this.$route.params.id;
     this.progressDialog.open();
     this.progressDialog.updateMessage('페이지를 로딩중입니다.');
-
-    // CK Editor init
-    // TODO If ie not build this
-    this.editor = await CKClassicEditor.create(this.$refs.editorField, {});
-    const repo = this.editor.plugins.get('FileRepository');
-    repo.createUploadAdapter = (loader: any) => {
-      return new UploadAdapter(loader, this.id);
-    };
-
-    // Board Categories 데이터 로드
-    this.boardCategories = await this.collectionBoardCategory.get(
-      BoardCategory
-    );
-
-    // Board 데이터베이스 데이터 로드 or 초기화
-    const collection = new FirestoreCollection<BoardItem>('/board');
-    try {
-      // exist
-      this.boardItem = await collection.load(BoardItem, this.id);
-      console.log(`board ${this.id} loaded`);
-      const content = await axios.get(this.boardItem.data.content);
-      this.editor.setData(content.data);
-      this.uiOptions.selectedCategory = this.boardItem.data.category.name;
-      console.log(content);
-    } catch (e) {
-      this.boardItem = collection.generate(new BoardItem(), this.id);
-      this.boardItem.data.createdAt = this.boardItem.data.modifiedAt = new Date().toUTCString();
-      this.boardItem.data.category = new BoardCategory();
-      console.log(`board ${this.id} generated`);
-    }
-    this.editor.model.document.on('change:data', this.saveContent);
-
+    this.editor = await ClassicEditor.create(this.$refs.editorField, config);
+    console.log(this.editor);
+    // const repo = this.editor.plugins.get('FileRepository');
+    // repo.createUploadAdapter = (loader: any) => {
+    //   const adapter = new UploadAdapter(loader, this.id);
+    //   console.log(adapter);
+    //   return adapter;
+    // };
     this.progressDialog.close();
+    return;
+    // this.editor = await CKClassicEditor.create(this.$refs.editorField, {});
+    // const repo = this.editor.plugins.get('FileRepository');
+    // repo.createUploadAdapter = (loader: any) => {
+    //   return new UploadAdapter(loader, this.id);
+    // };
+
+    // // Board Categories 데이터 로드
+    // this.boardCategories = await this.collectionBoardCategory.get(
+    //   BoardCategory
+    // );
+
+    // // Board 데이터베이스 데이터 로드 or 초기화
+    // const collection = new FirestoreCollection<BoardItem>('/board');
+    // try {
+    //   // exist
+    //   this.boardItem = await collection.load(BoardItem, this.id);
+    //   console.log(`board ${this.id} loaded`);
+    //   const content = await axios.get(this.boardItem.data.content);
+    //   this.editor.setData(content.data);
+    //   this.uiOptions.selectedCategory = this.boardItem.data.category.name;
+    //   console.log(content);
+    // } catch (e) {
+    //   this.boardItem = collection.generate(new BoardItem(), this.id);
+    //   this.boardItem.data.createdAt = this.boardItem.data.modifiedAt = new Date().toUTCString();
+    //   this.boardItem.data.category = new BoardCategory();
+    //   console.log(`board ${this.id} generated`);
+    // }
+    // this.editor.model.document.on('change:data', this.saveContent);
+
+    // this.progressDialog.close();
   }
   private created() {
     console.log('created!');

@@ -1,5 +1,5 @@
 <template>
-  <div class="board-item-previewer">
+  <div class="board-item-previewer" @click="$router.push(`/board/${boardItem.id}`)">
     <div class="image-field">
       <div v-if="boardItem === undefined" class="image-loading"></div>
       <v-img v-else :src="boardItem.data.mainImageURL" width="100%" height="100%"></v-img>
@@ -102,9 +102,11 @@ export default class BoardItemPreviewer extends Vue {
     width: 100%;
     bottom: -50px;
     transition: bottom 0.3s;
-    // pointer-events: none;
+
     .previewer-title-container {
+      pointer-events: none;
       .previewer-title {
+        pointer-events: none;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;

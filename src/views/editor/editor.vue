@@ -138,6 +138,7 @@
 
     <v-layout class="editor-field">
       <v-flex xs12>
+        <!-- <ckeditor :editor="editor" :config="editorConfig"></ckeditor> -->
         <div ref="editorField"></div>
       </v-flex>
     </v-layout>
@@ -152,7 +153,7 @@
         v-if="boardItem !== null"
         color="primary"
         flat
-        @click="changeBoardState(undefined)"
+        @click="changeBoardState"
         :loading="uiOptions.saving"
       >{{boardItem.data.state === 'editing'?'publish':'unpublish'}}</v-btn>
     </v-layout>
@@ -195,13 +196,26 @@
 <script src='./editor.ts' />
 <style lang='scss'>
 @import '../../style/_common.scss';
+
+pre {
+  background: #333;
+  color: #fff;
+  padding: 16px;
+}
+// TODO h1 -> to vuetify typo
 .options-container-wrap {
   padding: 1px;
+}
+.ck.ck-button__label {
+  line-height: 1.2 !important;
 }
 .ck-rounded-corners,
 .ck-toolbar {
   border-radius: 0 !important;
   border-color: #ccc !important;
+}
+.ck-toolbar {
+  border-width: 1px !important;
 }
 .ck-focused {
   box-shadow: none !important;

@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import Index from '@/views/Index.vue';
-import Editor from '@/views/editor';
+// import Editor from '@/views/editor';
 import Board from '@/views/board';
 import Articles from '@/views/articles.vue';
 
@@ -25,7 +25,7 @@ export default new Router({
     {
       path: '/editor/:id',
       name: 'editor',
-      component: Editor
+      component: () => import(/* webpackChunkName: "editor" */ './views/editor')
     },
     {
       path: '/board/:id',

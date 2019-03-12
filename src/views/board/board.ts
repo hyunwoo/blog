@@ -1,5 +1,4 @@
 import { Component, Vue } from 'vue-property-decorator';
-import UploadAdapter from '@/lib/uploadAdapter';
 import { UiBoardIcon, UiConfiguration } from '@/lib/configuration/ui';
 import axios from 'axios';
 import FileUtil from '@/util/file';
@@ -41,9 +40,8 @@ export default class Board extends Vue {
     try {
       // exist
       this.boardItem = await collection.load(BoardItem, this.id);
-      console.log(`board ${this.id} loaded`);
+      console.log(this.boardItem);
       this.boardContent = (await axios.get(this.boardItem.data.content)).data;
-      console.log(this.boardContent);
     } catch (e) {
       console.error('not exist content');
     }

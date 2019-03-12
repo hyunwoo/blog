@@ -1,4 +1,11 @@
 @import '../../style/_common.scss';
+.relateboard-list {
+  position: relative;
+  .board-item {
+    height: 200px;
+  }
+}
+
 .board-content {
   figure.image {
     display: block;

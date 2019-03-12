@@ -1,4 +1,11 @@
 $border-color: rgba(0, 0, 0, 0.132);
+
+.section {
+  max-width: 960px;
+}
+.cursor--pointer {
+  cursor: pointer;
+}
 .progress--area {
   z-index: 10;
   width: 100%;
