@@ -1,6 +1,7 @@
 // import CKClassicEditor from '@ckeditor/ckeditor5-build-classic/';
 import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
 import { Component, Vue, Watch } from 'vue-property-decorator';
+import UploadAdapter from './uploadAdapter';
 import { UiBoardIcon, UiConfiguration } from '@/lib/configuration/ui';
 import { debounce, isNil } from 'lodash';
 import axios from 'axios';
@@ -8,7 +9,6 @@ import marked from 'marked';
 import FileUtil from '@/util/file';
 import _ from 'lodash';
 import { BoardItem, BoardCategory } from '@/lib/forms';
-import uuid from 'uuid/v1';
 import {
   FirestoreCollection,
   FirestoreDocument,
@@ -17,8 +17,6 @@ import {
 
 import config from './configration';
 import TinyEditor from '@tinymce/tinymce-vue';
-
-import '@/lib/prism/prism.css';
 // commonjs require
 // NOTE: default needed after require
 
@@ -30,46 +28,20 @@ import '@/lib/prism/prism.css';
 export default class Editor extends Vue {
   get tinyEditorConfiguration() {
     return {
-      branding: false,
-      max_width: 800,
+      plugins: 'wordcount codesample advlist autoresize',
+      toolbar: 'codesample forecolor backcolor',
+      advlist_bullet_styles: 'square',
       min_height: 500,
-      // menubar: false,
-      quickbars_selection_toolbar:
-        'blocks font bold italic | h1 h2 h3 blockquote ',
-      plugins:
-        'wordcount fullscreen code quickbars searchreplace ' + // system
-        'image imagetools media autolink codesample link ' + // embed
-        'anchor code lists table ',
-      toolbar:
-        'fontselect bold italic underline strikethrough blockquote | forecolor backcolor | ' +
-        'alignleft aligncenter alignright alignjustify | outdent indent | ' +
-        'codesample image media | ' +
-        'numlist bullist link anchor | ' +
-        'fullscreen ',
-      contextmenu: 'image link',
-      images_upload_handler: this.onUploadImage,
-      automatic_uploads: false,
-      resize: false,
-      autoresize: 'off',
-      codesample_languages: [
-        { text: 'HTML/XML', value: 'markup' },
-        { text: 'JavaScript', value: 'javascript' },
-        { text: 'TypeScript', value: 'javascript' },
-        { text: 'CSS', value: 'css' },
-        { text: 'scss', value: 'css' },
-        { text: 'sass', value: 'css' },
-        { text: 'C#', value: 'csharp' }
-      ]
+      autoresize_bottom_margin: 50
     };
   }
+  public static mountedId: string = '';
 
   public $refs!: {
     boardItemPreview: HTMLElement;
     editorField: HTMLElement;
-    editor: any;
   };
 
-  public editorContent: string = '';
   public title: string = '';
   public fab: boolean = false;
   public editor = ClassicEditor;
@@ -107,19 +79,54 @@ export default class Editor extends Vue {
     this.saveContent = debounce(this.saveImmediate, 1000);
   }
 
-  public async onUploadImage(info, success, failure) {
-    try {
-      const mediaId = uuid();
-      const storageRef = `board/${this.id}/${mediaId}`;
-      const blob = info.blob();
-      const storage = new Storage(storageRef);
-      await storage.upload(blob);
-      const url = await storage.getDownloadURL();
-      const result = { default: url };
-      success(url);
-    } catch (e) {
-      failure(e);
-    }
+  public onUploadImage(callback, value, meta) {
+    console.log(callback, value, meta);
+  }
+
+  public async mounted() {
+    // Editor.mountedId = this.$route.params.id;
+    // this.progressDialog.open();
+    // this.progressDialog.updateMessage('페이지를 로딩중입니다.');
+    // this.editor = await ClassicEditor.create(this.$refs.editorField, config);
+    // console.log(this.editor);
+    // const repo = this.editor.plugins.get('FileRepository');
+    // repo.createUploadAdapter = (loader: any) => {
+    //   const adapter = new UploadAdapter(loader, this.id);
+    //   console.log(adapter);
+    //   return adapter;
+    // };
+    // this.progressDialog.close();
+    return;
+    // this.editor = await CKClassicEditor.create(this.$refs.editorField, {});
+    // const repo = this.editor.plugins.get('FileRepository');
+    // repo.createUploadAdapter = (loader: any) => {
+    //   return new UploadAdapter(loader, this.id);
+    // };
+
+    // // Board Categories 데이터 로드
+    // this.boardCategories = await this.collectionBoardCategory.get(
+    //   BoardCategory
+    // );
+
+    // // Board 데이터베이스 데이터 로드 or 초기화
+    // const collection = new FirestoreCollection<BoardItem>('/board');
+    // try {
+    //   // exist
+    //   this.boardItem = await collection.load(BoardItem, this.id);
+    //   console.log(`board ${this.id} loaded`);
+    //   const content = await axios.get(this.boardItem.data.content);
+    //   this.editor.setData(content.data);
+    //   this.uiOptions.selectedCategory = this.boardItem.data.category.name;
+    //   console.log(content);
+    // } catch (e) {
+    //   this.boardItem = collection.generate(new BoardItem(), this.id);
+    //   this.boardItem.data.createdAt = this.boardItem.data.modifiedAt = new Date().toUTCString();
+    //   this.boardItem.data.category = new BoardCategory();
+    //   console.log(`board ${this.id} generated`);
+    // }
+    // this.editor.model.document.on('change:data', this.saveContent);
+
+    // this.progressDialog.close();
   }
 
   public async changeBoardState(isPublish?: boolean | MouseEvent) {
@@ -177,7 +184,7 @@ export default class Editor extends Vue {
     }
     this.uiOptions.saving = true;
     const storage = new Storage(`/board/${this.id}/index.html`);
-    await storage.uploadString(this.editorContent);
+    await storage.uploadString(this.editor.getData());
     const url = await storage.getDownloadURL();
     const content = url;
     this.boardItem.data.content = content;
@@ -193,31 +200,6 @@ export default class Editor extends Vue {
   }
   public async uploadMD() {
     // TODO
-  }
-  private async mounted() {
-    // Board Categories 데이터 로드
-    this.boardCategories = await this.collectionBoardCategory.get(
-      BoardCategory
-    );
-    // Board 데이터베이스 데이터 로드 or 초기화
-    const collection = new FirestoreCollection<BoardItem>('/board');
-    try {
-      // exist
-      this.boardItem = await collection.load(BoardItem, this.id);
-      console.log(`board ${this.id} loaded`);
-      const response = await axios.get(this.boardItem.data.content);
-      this.editorContent = response.data;
-      this.uiOptions.selectedCategory = this.boardItem.data.category.name;
-      console.log(response);
-    } catch (e) {
-      this.boardItem = collection.generate(new BoardItem(), this.id);
-      this.boardItem.data.createdAt = this.boardItem.data.modifiedAt = new Date().toUTCString();
-      this.boardItem.data.category = new BoardCategory();
-      console.log(`board ${this.id} generated`);
-    }
-    setTimeout(() => {
-      console.log(this.$refs.editor.editor.getContent());
-    }, 1000);
   }
 
   private created() {

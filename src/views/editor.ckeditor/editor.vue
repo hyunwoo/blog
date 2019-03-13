@@ -137,13 +137,19 @@
     </v-layout>
 
     <v-layout class="editor-field">
-      <v-flex xs12 v-if="boardItem !== null">
+      <v-flex xs12>
         <!-- <ckeditor :editor="editor" :config="editorConfig"></ckeditor> -->
         <tiny-editor
-          ref="editor"
-          v-model="editorContent"
           api-key="w9nga9ek5y1h1cc4j8pyh859z90cwqara2za3ob3hrnymla3"
-          :init="tinyEditorConfiguration"
+          :init="{
+            plugins: 'wordcount codesample advlist autoresize image',
+            menubar: 'insert',
+            toolbar: 'codesample forecolor backcolor image',
+            images_upload_handler: onUploadImage,
+            images_upload_url: 'postAcceptor.php',
+            automatic_uploads: false,
+            file_picker_types: 'image'
+          }"
         ></tiny-editor>
       </v-flex>
     </v-layout>
@@ -202,20 +208,6 @@
 <style lang='scss'>
 @import '../../style/_common.scss';
 
-.tox.tox-fullscreen {
-  background: #fff;
-  .tox-editor-container {
-    border: solid 1px #ccc;
-    margin: auto;
-    max-width: 940px;
-  }
-}
-
-.section {
-  max-width: 940px;
-  padding: 0;
-}
-
 pre {
   background: #333;
   color: #fff;
@@ -225,7 +217,21 @@ pre {
 .options-container-wrap {
   padding: 1px;
 }
-
+.ck.ck-button__label {
+  line-height: 1.2 !important;
+}
+.ck-rounded-corners,
+.ck-toolbar {
+  border-radius: 0 !important;
+  border-color: #ccc !important;
+}
+.ck-toolbar {
+  border-width: 1px !important;
+}
+.ck-focused {
+  box-shadow: none !important;
+  outline: solid 1px #bbb;
+}
 .category-list-tile {
   .delete-icon {
     opacity: 0;
@@ -255,7 +261,9 @@ pre {
   height: 280px;
   position: relative;
 }
-
+.section {
+  max-width: 1024px;
+}
 .editor-field {
 }
 .ck.ck-editor {

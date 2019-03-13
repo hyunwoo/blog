@@ -10,6 +10,8 @@ import {
 } from '@/lib/firebase';
 
 import '@ckeditor/ckeditor5-theme-lark';
+import '@/lib/prism/prism.css';
+
 @Component({})
 export default class Board extends Vue {
   public $refs!: {
@@ -45,6 +47,8 @@ export default class Board extends Vue {
     } catch (e) {
       console.error('not exist content');
     }
+
+    require('@/lib/prism/prism.js');
 
     this.progressDialog.close();
   }
