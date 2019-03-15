@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import store from './store';
+import store from '@/store';
 import { Route } from 'vue-router';
 import Vuetify, { VuetifyUseOptions, VuetifyObject } from 'vuetify';
 

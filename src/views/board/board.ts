@@ -34,9 +34,6 @@ export default class Board extends Vue {
 
   // private methods Vue Default Methods
   private async mounted() {
-    this.progressDialog.open();
-    this.progressDialog.updateMessage('페이지를 로딩중입니다.');
-
     // Board 데이터베이스 데이터 로드 or 초기화
     const collection = new FirestoreCollection<BoardItem>('/board');
     try {
@@ -49,8 +46,6 @@ export default class Board extends Vue {
     }
 
     require('@/lib/prism/prism.js');
-
-    this.progressDialog.close();
   }
   private created() {
     console.log('created!');

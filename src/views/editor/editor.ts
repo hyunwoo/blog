@@ -19,6 +19,7 @@ import config from './configration';
 import TinyEditor from '@tinymce/tinymce-vue';
 
 import '@/lib/prism/prism.css';
+import { auth } from '@/lib/firebase';
 // commonjs require
 // NOTE: default needed after require
 
@@ -59,14 +60,16 @@ export default class Editor extends Vue {
         { text: 'scss', value: 'css' },
         { text: 'sass', value: 'css' },
         { text: 'C#', value: 'csharp' }
-      ]
+      ],
+      setup: (editor) => {
+        editor.on('init', this.onEditorInitailized);
+      }
     };
   }
 
   public $refs!: {
     boardItemPreview: HTMLElement;
-    editorField: HTMLElement;
-    editor: any;
+    tm: any;
   };
 
   public editorContent: string = '';
@@ -194,13 +197,40 @@ export default class Editor extends Vue {
   public async uploadMD() {
     // TODO
   }
+
+  private created() {
+    this.id = this.$route.params.id;
+    this.$loadingDialog.open();
+    if (!this.$store.getters.isAuth) {
+      this.$snackbar.show('작성 권한이 없습니다.');
+      this.$router.push('/');
+      this.$loadingDialog.close();
+      return;
+    }
+
+    auth.addChangeListener(
+      'editor',
+      async (user) => {
+        if (user === null) {
+          this.$loadingDialog.close();
+          this.$snackbar.show('작성 권한이 없습니다.');
+          this.$router.push('/');
+          return;
+        }
+      },
+      true
+    );
+  }
+
   private async mounted() {
     // Board Categories 데이터 로드
+
     this.boardCategories = await this.collectionBoardCategory.get(
       BoardCategory
     );
     // Board 데이터베이스 데이터 로드 or 초기화
     const collection = new FirestoreCollection<BoardItem>('/board');
+
     try {
       // exist
       this.boardItem = await collection.load(BoardItem, this.id);
@@ -215,14 +245,11 @@ export default class Editor extends Vue {
       this.boardItem.data.category = new BoardCategory();
       console.log(`board ${this.id} generated`);
     }
-    setTimeout(() => {
-      console.log(this.$refs.editor.editor.getContent());
-    }, 1000);
   }
 
-  private created() {
-    console.log('created!');
-    this.id = this.$route.params.id;
+  private onEditorInitailized() {
+    this.$loadingDialog.close();
+    this.$snackbar.show('에디터가 로드 되었습니다.');
   }
 
   private async uploadMainImage() {
@@ -231,18 +258,19 @@ export default class Editor extends Vue {
     }
     try {
       const file = await FileUtil.readInputFile('.jpg,.jpeg,.png');
-      this.progressDialog.open();
-      this.progressDialog.updateMessage(
+      this.$progressDialog.open();
+      this.$progressDialog.updateMessage(
         '이미지를 업로드하고 프리뷰를 생성합니다.'
       );
+
       const storage = new Storage(`/board/${this.id}/mainImage`);
       await storage.upload(file);
       const url = await storage.getDownloadURL();
       this.boardItem.data.mainImageURL = url;
       await this.saveImmediate();
-      this.progressDialog.close();
+      this.$progressDialog.close();
     } catch (e) {
-      this.progressDialog.close();
+      this.$progressDialog.close();
     }
     // todo Upload File
   }

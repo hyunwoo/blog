@@ -108,10 +108,8 @@ export default class Index extends Vue {
       .limit(6);
     // const boards = await query.exec(BoardItem);
     const boards = await this.colBoardItem.get(BoardItem);
-    console.log(boards);
 
     boards.forEach((board, i) => {
-      console.log('add', board, i);
       Vue.set(this.boardItems, i, board);
     });
   }

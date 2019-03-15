@@ -3,7 +3,6 @@
     <v-dialog v-model="uiCategoryDialog.visible" persistent max-width="480px">
       <v-card>
         <v-card-title>
-          <v-icon>settings</v-icon>
           <span class="headline pl-2 font-weight-medium">CATEGORY SETTING</span>
         </v-card-title>
         <v-divider></v-divider>
@@ -140,7 +139,7 @@
       <v-flex xs12 v-if="boardItem !== null">
         <!-- <ckeditor :editor="editor" :config="editorConfig"></ckeditor> -->
         <tiny-editor
-          ref="editor"
+          ref="tm"
           v-model="editorContent"
           api-key="w9nga9ek5y1h1cc4j8pyh859z90cwqara2za3ob3hrnymla3"
           :init="tinyEditorConfiguration"
