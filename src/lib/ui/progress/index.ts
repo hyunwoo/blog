@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import ProgressDialog from './progressDialog.vue';
-import { Dialog } from '../dialog';
+import { Dialog } from '../base/dialog';
 
 declare module 'vue/types/vue' {
   interface Vue {

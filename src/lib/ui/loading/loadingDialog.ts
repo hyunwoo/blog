@@ -1,4 +1,4 @@
-import { Dialog } from '../dialog';
+import { Dialog } from '../base/dialog';
 import { Component } from 'vue-property-decorator';
 
 @Component({})

@@ -13,11 +13,7 @@
     </v-navigation-drawer>
     <v-toolbar app class="elevation-0 bb" clipped-left>
       <v-btn icon class="ml-0" @click="useDrawer = !useDrawer">
-        <v-avatar size="38">
-          <v-img
-            src="https://lh6.googleusercontent.com/-34SOXv625HE/AAAAAAAAAAI/AAAAAAAADmc/7pTS94M3wlg/photo.jpg"
-          ></v-img>
-        </v-avatar>
+        <div class="font--cursive font-weight-bold title">A</div>
       </v-btn>
 
       <v-spacer></v-spacer>

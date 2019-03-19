@@ -213,8 +213,9 @@ export default class Editor extends Vue {
     }
     try {
       const file = await FileUtil.readInputFile('.jpg,.jpeg,.png');
-      this.progressDialog.open();
-      this.progressDialog.updateMessage(
+
+      this.$progressDialog.open();
+      this.$progressDialog.updateMessage(
         '이미지를 업로드하고 프리뷰를 생성합니다.'
       );
       const storage = new Storage(`/board/${this.id}/mainImage`);
@@ -222,9 +223,9 @@ export default class Editor extends Vue {
       const url = await storage.getDownloadURL();
       this.boardItem.data.mainImageURL = url;
       await this.saveImmediate();
-      this.progressDialog.close();
+      this.$progressDialog.close();
     } catch (e) {
-      this.progressDialog.close();
+      this.$progressDialog.close();
     }
     // todo Upload File
   }
