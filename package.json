@@ -38,6 +38,7 @@
     "koa-static": "^5.0.0",
     "npm": "^6.9.0",
     "postcss-loader": "^3.0.0",
+    "prismjs": "^1.15.0",
     "raw-loader": "^0.5.1",
     "vue": "^2.6.8",
     "vue-class-component": "^6.0.0",

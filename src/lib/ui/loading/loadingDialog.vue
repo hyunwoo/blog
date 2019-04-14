@@ -1,14 +1,7 @@
 <template>
-  <v-dialog v-model="use"
-            fullscreen
-            hide-overlay
-            class="font-sans"
-            transition="fade-transition">
-    <div class="dialog-cover text-xs-center"
-         :style="{background:'rgba(255,255,255,'+ opacity +')'}">
-      <v-progress-circular :size="60"
-                           color="primary"
-                           indeterminate></v-progress-circular>
+  <v-dialog v-model="use" fullscreen hide-overlay class="font-sans" transition="fade-transition">
+    <div class="dialog-cover text-xs-center" :style="{background: backgroundColor}">
+      <v-progress-circular :size="60" :color="color" indeterminate></v-progress-circular>
     </div>
   </v-dialog>
 </template>
@@ -16,7 +9,6 @@
 
 <style lang='scss' scoped>
 .dialog-cover {
-  background: #fff;
   width: 100%;
   height: 100%;
   overflow: hidden;

@@ -3,12 +3,16 @@ import { Component } from 'vue-property-decorator';
 
 @Component({})
 export default class LoadingDialog extends Dialog {
-  private name: string = 'loadingDialog';
-  private opacity: number = 1;
+  public name: string = 'loadingDialog';
+  private backgroundColor: string = '#ffffff';
+  private color: string = '#f00000';
 
-  public open(opacity?: number): LoadingDialog {
-    this.opacity = opacity ? opacity : 1;
-    console.log(opacity, this.opacity);
+  public open(backgroundColor?: string, color?: string): LoadingDialog {
+    this.backgroundColor = backgroundColor ? backgroundColor : '#ffffff';
+    this.color = color ? color : this.$vuetify.theme.primary.toString();
     return super.open() as LoadingDialog;
+  }
+  public mounted() {
+    this.color = this.$vuetify.theme.primary.toString();
   }
 }

@@ -1,6 +1,6 @@
 // import CKClassicEditor from '@ckeditor/ckeditor5-build-classic/';
 import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
-import { Component, Vue, Watch } from 'vue-property-decorator';
+import { Component, Vue, Watch, Emit } from 'vue-property-decorator';
 import { UiBoardIcon, UiConfiguration } from '@/lib/configuration/ui';
 import { debounce, isNil } from 'lodash';
 import axios from 'axios';
@@ -20,6 +20,8 @@ import TinyEditor from '@tinymce/tinymce-vue';
 
 import '@/lib/prism/prism.css';
 import { auth } from '@/lib/firebase';
+import { BoardItemPreviewer } from '@/components/boardItemPreviewer';
+
 // commonjs require
 // NOTE: default needed after require
 
@@ -33,20 +35,20 @@ export default class Editor extends Vue {
     return {
       branding: false,
       max_width: 800,
-      min_height: 500,
+      min_height: 680,
       // menubar: false,
       quickbars_selection_toolbar:
-        'blocks font bold italic | h1 h2 h3 blockquote ',
+        'blocks font bold italic | h1 h2 h3 blockquote | forecolor ',
       plugins:
         'wordcount fullscreen code quickbars searchreplace ' + // system
         'image imagetools media autolink codesample link ' + // embed
-        'anchor code lists table ',
+        'anchor code lists table advcode',
       toolbar:
         'fontselect bold italic underline strikethrough blockquote | forecolor backcolor | ' +
         'alignleft aligncenter alignright alignjustify | outdent indent | ' +
         'codesample image media | ' +
         'numlist bullist link anchor | ' +
-        'fullscreen ',
+        'fullscreen',
       contextmenu: 'image link',
       images_upload_handler: this.onUploadImage,
       automatic_uploads: false,
@@ -67,8 +69,8 @@ export default class Editor extends Vue {
     };
   }
 
-  public $refs!: {
-    boardItemPreview: HTMLElement;
+  public $refs!: Vue['$refs'] & {
+    boardItemPreviewer: BoardItemPreviewer;
     tm: any;
   };
 
@@ -77,7 +79,7 @@ export default class Editor extends Vue {
   public fab: boolean = false;
   public editor = ClassicEditor;
   public editorConfig = config;
-  public boardItem: FirestoreDocument<BoardItem> | null = null;
+  public boardItem!: FirestoreDocument<BoardItem>;
   public boardIcon: number | undefined = 0;
   public boardIcons: UiBoardIcon[] = UiConfiguration.uiBoardIcons;
   public category: string = UiConfiguration.uiCategoryNames[0];
@@ -90,24 +92,39 @@ export default class Editor extends Vue {
     saving: false,
     selectedCategory: ''
   };
+  public loaded = {
+    editor: false,
+    auth: false
+  };
 
   public uiCategoryDialog = {
     visible: false,
     inProgress: false
   };
   public boardCategoryModel = new BoardCategory();
-  public collectionBoardCategory = new FirestoreCollection<BoardCategory>(
-    '/boardCategory'
-  );
   public boardCategories: Array<FirestoreDocument<BoardCategory>> = [];
-
-  // @ts-ignore : Mounted에 호출됨.
 
   private id: string = '';
 
   constructor() {
     super();
     this.saveContent = debounce(this.saveImmediate, 1000);
+  }
+
+  public onRefreshPreview() {
+    this.$refs.boardItemPreviewer.refresh();
+  }
+  public onClickPreview(id: string) {
+    console.log('??');
+    this.$snackbar.showWithAction(
+      'VIEW 버튼을 클릭하여 게시글을 확인 할 수 있습니다.',
+      'VIEW',
+      () => {
+        this.$router.push(`/board/${id}`);
+      },
+      true
+    );
+    console.log(this.$refs);
   }
 
   public async onUploadImage(info, success, failure) {
@@ -126,25 +143,28 @@ export default class Editor extends Vue {
   }
 
   public async changeBoardState(isPublish?: boolean | MouseEvent) {
-    if (this.boardItem === null) {
-      return;
-    }
-
     if (isPublish !== undefined && !(isPublish instanceof MouseEvent)) {
-      this.boardItem.data.state = isPublish ? 'editing' : 'published';
+      this.boardItem.data.published = isPublish;
     } else {
-      if (this.boardItem.data.state === 'editing') {
-        this.boardItem.data.state = 'published';
-      } else {
-        this.boardItem.data.state = 'editing';
-      }
+      this.boardItem.data.published = !this.boardItem.data.published;
     }
     await this.saveImmediate();
   }
+  public async deleteBoard() {
+    this.$progressDialog.open();
+    this.$progressDialog.updateMessage('포스트를 삭제중입니다..');
+    await this.boardItem.delete();
+    this.$snackbar.show('포스트의 삭제가 완료되었습니다.');
+    this.$router.push('/my');
+    this.$progressDialog.close();
+  }
+
   public async createCategory() {
     this.uiCategoryDialog.inProgress = true;
     this.boardCategoryModel.createdAt = new Date().toUTCString();
-    const item = this.collectionBoardCategory.generate(this.boardCategoryModel);
+    const item = this.$collection.boardCategory.generate(
+      this.boardCategoryModel
+    );
     this.boardCategoryModel = new BoardCategory();
     await item.saveSync();
     this.boardCategories.push(item);
@@ -158,14 +178,12 @@ export default class Editor extends Vue {
     this.uiCategoryDialog.inProgress = false;
   }
   public async onChangeCateogory(e) {
-    console.log(e);
     const found = this.boardCategories.find((cat) => cat.data.name === e);
-    console.log(found);
     if (this.boardItem === null || found === undefined) {
       return;
     }
     this.boardItem.data.category = found.data;
-    await this.boardItem.saveSync();
+    this.saveContent();
   }
 
   public getEditor() {
@@ -175,9 +193,7 @@ export default class Editor extends Vue {
     // TODO
   }
   public async saveImmediate() {
-    if (this.boardItem === null) {
-      return;
-    }
+    this.$refs.boardItemPreviewer.refresh();
     this.uiOptions.saving = true;
     const storage = new Storage(`/board/${this.id}/index.html`);
     await storage.uploadString(this.editorContent);
@@ -187,69 +203,97 @@ export default class Editor extends Vue {
     this.boardItem.data.modifiedAt = new Date().toUTCString();
     await this.boardItem.saveSync();
     this.uiOptions.saving = false;
+    this.$snackbar.show('저장이 완료되었습니다.');
   }
   public onChangeTitle() {
     console.log('change title');
   }
   public async uploadHtml() {
-    // TODO
+    try {
+      this.editorContent = await FileUtil.readInputFileAsString('.html');
+    } catch (e) {
+      // TODO
+    }
   }
   public async uploadMD() {
-    // TODO
+    try {
+      const mdString = await FileUtil.readInputFileAsString('.md');
+      const html = marked(mdString);
+      this.editorContent = html;
+    } catch (e) {
+      // TODO
+    }
   }
 
-  private created() {
+  @Watch('$route.params')
+  private onChangeRoute() {
+    console.log('route Changed', this);
     this.id = this.$route.params.id;
     this.$loadingDialog.open();
-    if (!this.$store.getters.isAuth) {
+    this.init();
+  }
+  private created() {
+    this.id = this.$route.params.id;
+    this.boardItem = this.$collection.board.generate(new BoardItem(), this.id);
+    this.$loadingDialog.open();
+  }
+  private async init() {
+    // @ts-ignore
+    this.boardItem = this.$collection.board.generate(new BoardItem(), this.id);
+    if (_.isEmpty(this.$store.getters.user)) {
+      this.$loadingDialog.close();
       this.$snackbar.show('작성 권한이 없습니다.');
       this.$router.push('/');
-      this.$loadingDialog.close();
       return;
     }
 
-    auth.addChangeListener(
-      'editor',
-      async (user) => {
-        if (user === null) {
-          this.$loadingDialog.close();
-          this.$snackbar.show('작성 권한이 없습니다.');
-          this.$router.push('/');
-          return;
-        }
-      },
-      true
-    );
-  }
-
-  private async mounted() {
-    // Board Categories 데이터 로드
-
-    this.boardCategories = await this.collectionBoardCategory.get(
+    this.boardCategories = await this.$collection.boardCategory.get(
       BoardCategory
     );
     // Board 데이터베이스 데이터 로드 or 초기화
-    const collection = new FirestoreCollection<BoardItem>('/board');
+    const collection = this.$collection.board;
 
     try {
       // exist
-      this.boardItem = await collection.load(BoardItem, this.id);
-      console.log(`board ${this.id} loaded`);
+
+      const item = await collection.load(BoardItem, this.id);
+      _.assign(this.boardItem, item);
       const response = await axios.get(this.boardItem.data.content);
       this.editorContent = response.data;
       this.uiOptions.selectedCategory = this.boardItem.data.category.name;
       console.log(response);
     } catch (e) {
-      this.boardItem = collection.generate(new BoardItem(), this.id);
       this.boardItem.data.createdAt = this.boardItem.data.modifiedAt = new Date().toUTCString();
       this.boardItem.data.category = new BoardCategory();
-      console.log(`board ${this.id} generated`);
+      this.boardItem.data.id = this.id;
+      this.boardItem.data.userId = this.$store.getters.user.id;
+      this.boardItem.data.userInfo = this.$store.getters.user.data;
+      this.editorContent = '';
+      console.log(`board ${this.id} generated`, this.boardItem.data);
+    }
+    this.loaded.auth = true;
+    console.log('current boardItem', this.boardItem);
+    this.$forceUpdate();
+    this.onLoadCheck();
+
+    console.log(this.$refs);
+    this.$refs.boardItemPreviewer.refresh();
+  }
+
+  private async mounted() {
+    this.init();
+  }
+
+  private onLoadCheck() {
+    if (this.loaded.editor && this.loaded.auth) {
+      this.$snackbar.show('에디터 로딩이 완료되었습니다.');
+      this.$loadingDialog.close();
     }
   }
 
   private onEditorInitailized() {
-    this.$loadingDialog.close();
-    this.$snackbar.show('에디터가 로드 되었습니다.');
+    this.loaded.editor = true;
+    this.onLoadCheck();
   }
 
   private async uploadMainImage() {

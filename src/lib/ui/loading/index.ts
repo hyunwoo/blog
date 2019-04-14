@@ -6,11 +6,8 @@ declare module 'vue/types/vue' {
   interface Vue {
     $loadingDialog: LoadingDialog;
   }
-}
-
-declare module 'vue/types/vue' {
   interface LoadingDialog extends Dialog {
-    open(backgroundOpacity?: number): LoadingDialog;
+    open(backgroundColor?: string, color?: string): LoadingDialog;
   }
 }
 

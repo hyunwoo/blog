@@ -2,14 +2,13 @@ import { Component, Vue } from 'vue-property-decorator';
 import { UiBoardIcon, UiConfiguration } from '@/lib/configuration/ui';
 import axios from 'axios';
 import FileUtil from '@/util/file';
+import Prism from 'prismjs';
 import { BoardItem, BoardCategory } from '@/lib/forms';
 import {
   FirestoreCollection,
   FirestoreDocument,
   Storage
 } from '@/lib/firebase';
-
-import '@ckeditor/ckeditor5-theme-lark';
 import '@/lib/prism/prism.css';
 
 @Component({})
@@ -45,7 +44,7 @@ export default class Board extends Vue {
       console.error('not exist content');
     }
 
-    require('@/lib/prism/prism.js');
+    process.nextTick(Prism.highlightAll);
   }
   private created() {
     console.log('created!');

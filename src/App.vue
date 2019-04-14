@@ -1,15 +1,22 @@
 <template>
   <v-app>
     <v-navigation-drawer mini-variant clipped app v-model="useDrawer">
-      <v-list>
-        <v-list-tile avatar class="py-2">
-          <v-list-tile-avatar width="24">
-            <v-img
-              src="https://lh6.googleusercontent.com/-34SOXv625HE/AAAAAAAAAAI/AAAAAAAADmc/7pTS94M3wlg/photo.jpg"
-            ></v-img>
-          </v-list-tile-avatar>
-        </v-list-tile>
-      </v-list>
+      <template v-for="(writer,i) in writers">
+        <v-tooltip right :key="i">
+          <template v-slot:activator="{ on }">
+            <!-- <v-btn flat @on="on">BTNBTN</v-btn> -->
+            <!-- <v-icon color="primary" dark v-on="on">home</v-icon> -->
+            <div v-on="on" class="d-block cursor--pointer">
+              <v-list-tile avatar class="py-2" v-on="on">
+                <v-list-tile-avatar width="24">
+                  <v-img :src="writer.data.photoURL"></v-img>
+                </v-list-tile-avatar>
+              </v-list-tile>
+            </div>
+          </template>
+          <span class="font-weight-medium">{{writer.data.displayName}}</span>
+        </v-tooltip>
+      </template>
     </v-navigation-drawer>
     <v-toolbar app class="elevation-0 bb" clipped-left>
       <v-btn icon class="ml-0" @click="useDrawer = !useDrawer">
@@ -43,14 +50,33 @@
               <v-list-tile-sub-title class="caption">{{$store.getters.user.data.email}}</v-list-tile-sub-title>
             </v-list-tile-content>
           </v-list-tile>
-          <v-divider></v-divider>
+          <v-divider class="pt-1"></v-divider>
+          <v-list-tile @click="signOut" class="mb-1">
+            <v-list-tile-avatar>
+              <v-icon>account_box</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-sub-title class="font-weight-medium">Profile Settings</v-list-tile-sub-title>
+            </v-list-tile-content>
+          </v-list-tile>
+          <v-list-tile @click="signOut" class="mb-1">
+            <v-list-tile-avatar>
+              <v-icon>pin_drop</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-sub-title class="font-weight-medium">Pins</v-list-tile-sub-title>
+            </v-list-tile-content>
+          </v-list-tile>
 
           <v-list-tile avatar to="/my">
             <v-list-tile-avatar>
               <v-icon>folder</v-icon>
             </v-list-tile-avatar>
             <v-list-tile-content>
-              <v-list-tile-sub-title class="font-weight-medium">My Posts</v-list-tile-sub-title>
+              <v-list-tile-sub-title
+                class="font-weight-medium"
+                style="color:#333 !important;"
+              >My Posts</v-list-tile-sub-title>
             </v-list-tile-content>
           </v-list-tile>
 
@@ -62,6 +88,7 @@
               <v-list-tile-sub-title class="font-weight-medium">Create Post</v-list-tile-sub-title>
             </v-list-tile-content>
           </v-list-tile>
+          <!-- SignOut -->
           <v-divider class="pt-1"></v-divider>
           <v-list-tile @click="signOut" class="mb-1">
             <v-list-tile-avatar>

@@ -1,7 +1,14 @@
 $border-color: rgba(0, 0, 0, 0.132);
 
+p {
+  line-height: 1.835 !important;
+}
+li {
+  line-height: 1.65 !important;
+}
 .section {
-  max-width: 960px;
+  max-width: 1080px;
+  padding: 16px;
 }
 .cursor--pointer {
   cursor: pointer;
@@ -21,17 +28,29 @@ $border-color: rgba(0, 0, 0, 0.132);
 .br {
   border-right: solid 1px $border-color;
 }
+.br-none {
+  border-right: none !important;
+}
 
 .bl {
   border-left: solid 1px $border-color;
+}
+.bl-none {
+  border-left: none !important;
 }
 
 .bt {
   border-top: solid 1px $border-color;
 }
+.bt-none {
+  border-top: none !important;
+}
 
 .bb {
   border-bottom: solid 1px $border-color;
+}
+.bb-none {
+  border-bottom: none !important;
 }
 
 .text-ellipse {

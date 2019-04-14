@@ -1,5 +1,5 @@
 <template>
-  <div class="board-item-previewer" @click="$router.push(`/board/${boardItem.id}`)">
+  <div class="board-item-previewer" @click="onClick">
     <div class="image-field">
       <div v-if="boardItem === undefined" class="image-loading"></div>
       <v-img v-else :src="boardItem.data.mainImageURL" width="100%" height="100%"></v-img>
@@ -29,22 +29,7 @@
     </div>
   </div>
 </template>
-<script lang='ts'>
-import { Component, Vue, Watch, Prop } from 'vue-property-decorator';
-import { BoardItem } from '@/lib/forms';
-import { FirestoreDocument } from '@/lib/firebase';
-
-@Component({})
-export default class BoardItemPreviewer extends Vue {
-  @Prop()
-  public boardItem: FirestoreDocument<BoardItem> | undefined;
-  public name: string = 'board-item-previewer';
-
-  public mounted() {
-    console.log('mounted', this.boardItem);
-  }
-}
-</script>
+<script src='./boardItemPreviewer.ts'></script>
 <style scoped lang='scss'>
 .board-item-previewer {
   width: 100%;

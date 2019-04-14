@@ -1,6 +1,6 @@
 import FirestoreDocumentData from '@/lib/firebase/firestore/documentData';
 
-export type UserType = 'supervisor' | 'authur' | 'guest';
+export type UserType = 'supervisor' | 'writer' | 'guest';
 export default class User extends FirestoreDocumentData {
   public displayName: string = '';
   public email: string = '';

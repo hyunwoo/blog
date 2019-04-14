@@ -2,7 +2,7 @@ import { Vue } from 'vue-property-decorator';
 
 declare module 'vue/types/vue' {
   interface Dialog {
-    open(): Dialog;
+    open(...arg: any): Dialog;
     updateProgress(progress: number): Dialog;
     updateMessage(message: string): Dialog;
     close(): Dialog;
@@ -24,7 +24,7 @@ export abstract class Dialog extends Vue {
     this.use = false;
     return this;
   }
-  public open(): Dialog {
+  public open(...arg: any): Dialog {
     console.log('open!');
     this.use = true;
     return this;

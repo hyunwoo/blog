@@ -56,6 +56,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
     <div class="save-indicator" :active="uiOptions.saving">
       <v-progress-circular
         color="green"
@@ -68,143 +69,134 @@
       <span class="save-indicator-text">저장중 ...</span>
     </div>
     <p class="headline pa-1 mt-4">게시글 작성</p>
-
-    <v-layout pa-1 wrap class="options-container pa-3" :class="{loading:boardItem === null}">
-      <v-flex xs12 sm8 class="pt-3 pr-2" v-if="boardItem !== null">
-        <v-layout>
-          <v-overflow-btn
-            d-flex
-            :items="boardCategories.map(cat => cat.data.name)"
-            v-model="uiOptions.selectedCategory"
-            @change="onChangeCateogory"
-          ></v-overflow-btn>
+    <p>{{boardItem === undefined}}</p>
+    <template v-if="boardItem !== undefined">
+      <v-layout pa-1 wrap class="options-container pa-3">
+        <v-flex xs12 sm8 class="pt-3 pr-2">
+          <v-layout>
+            <v-overflow-btn
+              d-flex
+              :items="boardCategories.map(cat => cat.data.name)"
+              v-model="uiOptions.selectedCategory"
+              @change="onChangeCateogory"
+            ></v-overflow-btn>
+            <v-btn
+              icon
+              class="mt-3 ml-4"
+              flat
+              color="accent"
+              @click="uiCategoryDialog.visible = true"
+            >
+              <v-icon>settings</v-icon>
+            </v-btn>
+          </v-layout>
+          <v-text-field
+            label="제목"
+            @change="saveContent"
+            v-model="boardItem.data.title"
+            :rules="getDefaultRules('제목')"
+            required
+            counter="40"
+          ></v-text-field>
+          <v-text-field
+            label="부제목"
+            @change="saveContent"
+            v-model="boardItem.data.description"
+            :rules="getDefaultRules('부제목')"
+            required
+            counter="40"
+          ></v-text-field>
           <v-btn
-            icon
-            class="mt-3 ml-4"
-            flat
-            color="accent"
-            @click="uiCategoryDialog.visible = true"
-          >
-            <v-icon>settings</v-icon>
-          </v-btn>
-        </v-layout>
-        <div
-          v-if="boardItem === null"
-          class="dummy"
-          style="background:#aaa; width : 100%; height : 25px; margin-bottom:20px;"
-        ></div>
-        <v-text-field
-          v-else
-          label="제목"
-          @change="saveContent"
-          v-model="boardItem.data.title"
-          :rules="getDefaultRules('제목')"
-          required
-          counter="40"
-        ></v-text-field>
-        <div
-          v-if="boardItem === null"
-          class="dummy"
-          style="background:#aaa; width : 100%; height : 25px;"
-        ></div>
-        <v-text-field
-          v-else
-          label="부제목"
-          @change="saveContent"
-          v-model="boardItem.data.description"
-          :rules="getDefaultRules('부제목')"
-          required
-          counter="40"
-        ></v-text-field>
+            color="primary"
+            @click="uploadMainImage"
+            class="mt-4 mb-2 elevation-0"
+            block
+            :disabled="isPublish"
+          >Upload Main Image</v-btn>
+        </v-flex>
+        <v-flex xs12 sm4 class="pa-3">
+          <div class="elevation-0 board-item-card-preview elevation-1">
+            <board-item-previewer
+              ref="boardItemPreviewer"
+              :boardItem="boardItem"
+              @click-preview="onClickPreview"
+            ></board-item-previewer>
+          </div>
+        </v-flex>
+      </v-layout>
+
+      <v-layout class="editor-field">
+        <v-flex xs12>
+          <!-- <ckeditor :editor="editor" :config="editorConfig"></ckeditor> -->
+          <tiny-editor
+            ref="tm"
+            v-model="editorContent"
+            api-key="w9nga9ek5y1h1cc4j8pyh859z90cwqara2za3ob3hrnymla3"
+            :init="tinyEditorConfiguration"
+          ></tiny-editor>
+        </v-flex>
+      </v-layout>
+      <v-layout class="action-container bt-none">
+        <v-btn flat @click="uploadHtml">Html Upload</v-btn>
+        <v-divider vertical></v-divider>
+        <v-btn flat @click="uploadMD">MD Upload</v-btn>
+        <v-divider vertical></v-divider>
+        <v-spacer></v-spacer>
+        <v-divider vertical></v-divider>
         <v-btn
-          color="primary"
-          @click="uploadMainImage"
-          class="mt-4 mb-2 elevation-0"
+          class="mx-2"
           block
-          :disabled="isPublish"
-        >Upload Main Image</v-btn>
-      </v-flex>
-      <v-flex xs12 sm4 class="pa-3">
-        <div
-          v-if="boardItem !== null"
-          class="elevation-0 board-item-card-preview elevation-1"
-          ref="boardItemPreview"
-        >
-          <board-item-previewer :boardItem="boardItem"></board-item-previewer>
-        </div>
-      </v-flex>
-    </v-layout>
+          color="error"
+          @click="changeBoardState"
+          :loading="uiOptions.saving"
+        >{{boardItem.data.published ?'포스트 게시 취소':'포스트 게시'}}</v-btn>
+      </v-layout>
+      <v-layout>
+        <v-spacer></v-spacer>
+      </v-layout>
+      <div class="my-5"></div>
+      <v-speed-dial
+        v-model="fab"
+        :top="false"
+        :bottom="true"
+        :right="true"
+        :left="false"
+        :direction="'top'"
+        :open-on-hover="false"
+        :transition="'slide-y-reverse-transition'"
+      >
+        <v-btn slot="activator" v-model="fab" color="blue darken-2" dark fab>
+          <v-icon>settings</v-icon>
+          <v-icon>close</v-icon>
+        </v-btn>
 
-    <v-layout class="editor-field">
-      <v-flex xs12 v-if="boardItem !== null">
-        <!-- <ckeditor :editor="editor" :config="editorConfig"></ckeditor> -->
-        <tiny-editor
-          ref="tm"
-          v-model="editorContent"
-          api-key="w9nga9ek5y1h1cc4j8pyh859z90cwqara2za3ob3hrnymla3"
-          :init="tinyEditorConfiguration"
-        ></tiny-editor>
-      </v-flex>
-    </v-layout>
-    <v-layout class="action-container">
-      <v-btn flat @click="uploadHtml" disabled>Html Upload</v-btn>
-      <v-divider vertical></v-divider>
-      <v-btn flat @click="uploadMD" disabled>MD Upload</v-btn>
-      <v-divider vertical></v-divider>
-      <v-spacer></v-spacer>
-      <v-divider vertical></v-divider>
-      <v-btn
-        v-if="boardItem !== null"
-        color="primary"
-        flat
-        @click="changeBoardState"
-        :loading="uiOptions.saving"
-      >{{boardItem.data.state === 'editing'?'publish':'unpublish'}}</v-btn>
-    </v-layout>
-    <v-layout>
-      <v-spacer></v-spacer>
-    </v-layout>
-    <div class="my-5"></div>
-    <v-speed-dial
-      v-model="fab"
-      :top="false"
-      :bottom="true"
-      :right="true"
-      :left="false"
-      :direction="'top'"
-      :open-on-hover="false"
-      :transition="'slide-y-reverse-transition'"
-    >
-      <v-btn slot="activator" v-model="fab" color="blue darken-2" dark fab>
-        <v-icon>settings</v-icon>
-        <v-icon>close</v-icon>
-      </v-btn>
+        <v-btn fab dark small color="green" @click="changeBoardState(true)">
+          <v-icon>send</v-icon>
+          <span>Tooltip</span>
+        </v-btn>
 
-      <v-btn fab dark small color="green" @click="changeBoardState(true)">
-        <v-icon>send</v-icon>
-        <span>Tooltip</span>
-      </v-btn>
-
-      <v-btn fab dark small color="indigo" @click="saveImmediate">
-        <v-icon>save</v-icon>
-      </v-btn>
-      <v-btn fab dark small color="pink" @click="saveImmediate">
-        <v-icon>code</v-icon>
-      </v-btn>
-      <v-btn fab dark small color="red">
-        <v-icon>delete</v-icon>
-      </v-btn>
-    </v-speed-dial>
+        <v-btn fab dark small color="indigo" @click="saveImmediate">
+          <v-icon>save</v-icon>
+        </v-btn>
+        <v-btn fab dark small color="pink" @click="changeBoardState">
+          <v-icon>code</v-icon>
+        </v-btn>
+        <v-btn fab dark small color="red" @click="deleteBoard">
+          <v-icon>delete</v-icon>
+        </v-btn>
+      </v-speed-dial>
+    </template>
   </v-container>
 </template>
 <script src='./editor.ts' />
 <style lang='scss'>
 @import '../../style/_common.scss';
 
+$border-color: #ccc;
 .tox.tox-fullscreen {
   background: #fff;
   .tox-editor-container {
-    border: solid 1px #ccc;
+    border: solid 1px $border-color;
     margin: auto;
     max-width: 940px;
   }
@@ -240,31 +232,18 @@ pre {
 .options-container {
   min-height: 360px;
   background: #fff;
-  border: solid 1px #ccc;
+  border: solid 1px $border-color;
   border-bottom: none;
   &.loading {
     background: #eee;
   }
 }
-.action-container {
-  border: solid 1px #ccc;
-  border-top: none;
-}
+
 .board-item-card-preview {
   height: 280px;
   position: relative;
 }
 
-.editor-field {
-}
-.ck.ck-editor {
-}
-.ck.ck-editor__main {
-}
-.ck.ck-editor__editable {
-  min-height: 480px;
-  max-height: 100%;
-}
 .v-speed-dial {
   position: fixed;
 }
@@ -280,6 +259,10 @@ pre {
   background: #eee;
   height: 300px;
   overflow-y: scroll;
+}
+
+.action-container {
+  border: solid 1px $border-color;
 }
 .save-indicator {
   position: fixed;

@@ -1,6 +1,6 @@
 <template >
   <div>
-    <v-container></v-container>
+    
     <v-container class="section py-5">
       <div v-if="boardItem !== null" class="title-group">
         <p class="display-1 px-1 font-weight-regular">{{boardItem.data.title}}</p>

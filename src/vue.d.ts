@@ -25,7 +25,4 @@ declare module 'vue/types/vue' {
     $route: Route;
     $vuetify: VuetifyObject;
   }
-  interface VueConstructor {
-    loadingDialog: Dialog;
-  }
 }
