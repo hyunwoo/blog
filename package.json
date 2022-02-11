@@ -29,7 +29,7 @@
     "@tinymce/tinymce-vue": "^2.0.0",
     "@types/uuid": "^3.4.4",
     "ckeditor5-code-block": "^1.0.2",
-    "froala-editor": "^2.9.3",
+    "froala-editor": "^4.0.7",
     "i": "^0.3.6",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
